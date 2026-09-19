@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MediCore — Lightweight CQRS Mediator for .NET</title>
+<style>
+:root{
+  --bg:#0b0b16; --bg2:#12122a; --card:#171733; --text:#e8e8f5; --muted:#9a9ac0;
+  --accent:#a5b4fc; --accent2:#6366f1; --border:#26264d;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f7f7fb; --bg2:#ffffff; --card:#ffffff; --text:#16162b; --muted:#5b5b80;
+    --accent:#4338ca; --accent2:#6366f1; --border:#e3e3f0;
+  }
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.55;
+}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+header{padding:56px 0 40px;}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+.logo{width:44px;height:44px;flex-shrink:0;}
+.brand-name{font-weight:700;font-size:1.15rem;letter-spacing:-0.01em;}
+.theme-btn{margin-left:auto;background:var(--card);border:1px solid var(--border);color:var(--text);
+  width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:1rem;}
+nav.brand{display:flex;}
+h1{font-size:2.6rem;line-height:1.1;margin:0 0 14px;letter-spacing:-0.02em;}
+.sub{color:var(--muted);font-size:1.15rem;max-width:640px;margin:0 0 28px;}
+.cta{display:flex;gap:12px;flex-wrap:wrap;}
+.btn{display:inline-block;padding:11px 20px;border-radius:10px;text-decoration:none;font-weight:600;font-size:0.95rem;}
+.btn-primary{background:var(--accent2);color:#fff;}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border);}
+.install{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin:36px 0;overflow-x:auto;}
+.install code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:0.95rem;color:var(--accent);white-space:pre;}
+section{padding:36px 0;border-top:1px solid var(--border);}
+h2{font-size:1.5rem;margin:0 0 18px;letter-spacing:-0.01em;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card h3{margin:0 0 8px;font-size:1rem;}
+.card p{margin:0;color:var(--muted);font-size:0.92rem;}
+pre{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;overflow-x:auto;font-size:0.85rem;}
+pre, code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+table{width:100%;border-collapse:collapse;font-size:0.9rem;}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);}
+th{color:var(--muted);font-weight:600;}
+footer{padding:40px 0 60px;color:var(--muted);font-size:0.88rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+footer a{color:var(--muted);}
+a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="22" fill="var(--accent2)"/>
+        <line x1="50" y1="50" x2="50" y2="22" stroke="var(--accent)" stroke-width="4"/>
+        <line x1="50" y1="50" x2="74" y2="64" stroke="var(--accent)" stroke-width="4"/>
+        <line x1="50" y1="50" x2="26" y2="64" stroke="var(--accent)" stroke-width="4"/>
+        <circle cx="50" cy="50" r="10" fill="#fff"/>
+        <circle cx="50" cy="22" r="7" fill="#e0e7ff"/>
+        <circle cx="74" cy="64" r="7" fill="#e0e7ff"/>
+        <circle cx="26" cy="64" r="7" fill="#e0e7ff"/>
+      </svg>
+      <span class="brand-name">MediCore</span>
+      <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme" onclick="toggleTheme()">◐</button>
+    </div>
+    <h1>A lightweight CQRS mediator for .NET 8</h1>
+    <p class="sub">First-class interceptors, a service registry, and strictly segregated interfaces — inspired by the mediator pattern, built from scratch.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://www.nuget.org/packages/MediCore">View on NuGet</a>
+      <a class="btn btn-secondary" href="https://github.com/VarunSalma/MediCore">View on GitHub</a>
+    </div>
+  </header>
+
+  <div class="install">
+    <code>dotnet add package MediCore</code>
+  </div>
+
+  <section>
+    <h2>Quick start</h2>
+    <pre><code>services.AddMediCore(o => o
+    .RegisterHandlersFromAssemblyContaining&lt;Program&gt;()
+    .AddDefaultInterceptors());              // Logging -> Validation -> Transaction
+
+public sealed record CreateOrder(string Customer) : ICommand&lt;Guid&gt;;
+
+public sealed class CreateOrderHandler : ICommandHandler&lt;CreateOrder, Guid&gt;
+{
+    public Task&lt;Guid&gt; HandleAsync(CreateOrder cmd, CancellationToken ct) => ...;
+}
+
+var id = await sender.SendAsync(new CreateOrder("Acme"));</code></pre>
+  </section>
+
+  <section>
+    <h2>Why MediCore</h2>
+    <div class="grid">
+      <div class="card"><h3>Interceptor pipeline</h3><p>Logging, validation and transactions wrap every request — or write your own with a generic constraint.</p></div>
+      <div class="card"><h3>CQRS built-in</h3><p>Commands and queries are distinct types; only commands get wrapped in a transaction.</p></div>
+      <div class="card"><h3>Service registry</h3><p>Inspect every discovered handler and interceptor at runtime for diagnostics and startup checks.</p></div>
+      <div class="card"><h3>Notification strategies</h3><p>Publish sequentially or in parallel — swap the strategy without touching handlers.</p></div>
+    </div>
+  </section>
+
+  <section id="docs">
+    <h2>Writing a custom interceptor</h2>
+    <p style="color:var(--muted);margin-top:0;">A generic constraint decides which requests an interceptor applies to — this one only touches queries:</p>
+    <pre><code>public sealed class CachingInterceptor&lt;TRequest, TResponse&gt;
+    : IRequestInterceptor&lt;TRequest, TResponse&gt;
+    where TRequest : IQuery&lt;TResponse&gt;
+{
+    public async Task&lt;TResponse&gt; InterceptAsync(
+        TRequest request, RequestHandlerDelegate&lt;TResponse&gt; next, CancellationToken ct)
+    {
+        // before ...
+        var response = await next();   // skip this line to short-circuit
+        // after ...
+        return response;
+    }
+}
+
+o.AddInterceptor(typeof(CachingInterceptor&lt;,&gt;));</code></pre>
+  </section>
+
+  <section>
+    <h2>Publishing notifications</h2>
+    <p style="color:var(--muted);margin-top:0;">Publish the concrete type — handlers resolve for the compile-time type, not the interface:</p>
+    <pre><code>public sealed record OrderPlaced(Guid OrderId) : INotification;
+
+public sealed class SendReceiptEmail : INotificationHandler&lt;OrderPlaced&gt;
+{
+    public Task HandleAsync(OrderPlaced n, CancellationToken ct) => ...;
+}
+
+await publisher.PublishAsync(new OrderPlaced(orderId));</code></pre>
+    <p style="color:var(--muted);">Swap <code>UseParallelNotificationPublisher()</code> in for the default sequential strategy if handlers don't depend on each other's order.</p>
+  </section>
+
+  <section>
+    <h2>Core interfaces</h2>
+    <table>
+      <tr><th>Interface</th><th>Use it when you...</th></tr>
+      <tr><td><code>ISender</code></td><td>only send commands/queries</td></tr>
+      <tr><td><code>IPublisher</code></td><td>only raise events</td></tr>
+      <tr><td><code>IRequestInterceptor</code></td><td>add a cross-cutting concern</td></tr>
+      <tr><td><code>ITransactionManager</code></td><td>plug in EF Core, Dapper, ADO.NET</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Changelog</h2>
+    <table>
+      <tr><th>Version</th><th>Notes</th></tr>
+      <tr><td><code>1.0.0</code></td><td>Initial release — mediator core, interceptors, notifications, transactions, service registry.</td></tr>
+    </table>
+  </section>
+
+  <footer>
+    <span>MIT licensed · © 2026 Varun Kumar A</span>
+    <span><a href="https://github.com/VarunSalma/MediCore">GitHub</a> · <a href="https://www.nuget.org/packages/MediCore">NuGet</a> · <a href="https://www.linkedin.com/in/varun-kumar-software-engineer">LinkedIn</a></span>
+  </footer>
+</div>
+<script>
+function applyStoredTheme(){
+  try{
+    const saved = localStorage.getItem('medicore-theme');
+    if(saved === 'light' || saved === 'dark'){
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  }catch(e){ /* storage unavailable, fall back to system preference */ }
+}
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('medicore-theme', next); }catch(e){ /* ignore */ }
+}
+applyStoredTheme();
+</script>
+</body>
+</html>
