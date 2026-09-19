@@ -77,7 +77,7 @@ tests/MediCore.Tests      xUnit tests
 | Dependency Inversion | everything is resolved through abstractions and the container |
 | CQRS | `ICommand` / `IQuery` split, transactions only for commands |
 
-## Interceptors (formerly "pipeline behaviors")
+## Interceptors 
 
 Execution order = registration order. The first registered is the **outermost**.
 
