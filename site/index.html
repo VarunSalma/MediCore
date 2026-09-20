@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MediCore — CQRS mediator for .NET with built-in interceptors</title>
+<meta name="description" content="MediCore is a lightweight CQRS mediator for .NET with request interceptors for logging, validation and transactions, plus notifications and a service registry.">
+<meta name="theme-color" content="#060918">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="canonical" href="https://YOUR_DOMAIN/">
+<meta name="robots" content="index,follow">
+<meta name="author" content="Varun Kumar A">
+
+<!-- Social sharing (LinkedIn, X, Slack, WhatsApp) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MediCore">
+<meta property="og:url" content="https://YOUR_DOMAIN/">
+<meta property="og:title" content="MediCore — CQRS mediator for .NET">
+<meta property="og:description" content="Send a command. Validation, logging and transactions run around it automatically.">
+<meta property="og:image" content="https://YOUR_DOMAIN/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="MediCore logo with the text: CQRS mediator for .NET">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MediCore — CQRS mediator for .NET">
+<meta name="twitter:description" content="Send a command. Validation, logging and transactions run around it automatically.">
+<meta name="twitter:image" content="https://YOUR_DOMAIN/assets/og-image.png">
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MediCore","applicationCategory":"DeveloperApplication","operatingSystem":".NET 8","description":"Lightweight CQRS mediator for .NET with request interceptors for logging, validation and transactions, plus notifications and a service registry.","url":"https://YOUR_DOMAIN/","downloadUrl":"https://www.nuget.org/packages/MediCore","license":"https://opensource.org/licenses/MIT","author":{"@type":"Person","name":"Varun Kumar A"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+
+<noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#060918;
+  --ink:#eef2ff;
+  --ink-2:#a9b4d6;
+  --ink-3:#6f7ba3;
+  --blue:#0196fa;
+  --cyan:#22d3ee;
+  --violet:#7420f9;
+  --line:rgba(255,255,255,.12);
+  --glass:rgba(255,255,255,.06);
+  --glass-strong:rgba(255,255,255,.10);
+  --grad:linear-gradient(120deg,#22d3ee 0%,#0196fa 45%,#7420f9 100%);
+  --radius-lg:28px;
+  --radius-md:18px;
+  --radius-sm:12px;
+  --font-display:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
+.wrap{width:min(1160px,100% - 40px);margin-inline:auto}
+
+.skip{position:absolute;left:12px;top:-60px;z-index:200;padding:10px 16px;border-radius:999px;background:#fff;color:#04101f;font-weight:600}
+.skip:focus{top:12px}
+
+/* ---------- Ambient background ---------- */
+.ambient{position:fixed;inset:0;z-index:-1;overflow:hidden;background:
+  radial-gradient(1200px 700px at 80% -10%,rgba(116,32,249,.18),transparent 60%),
+  radial-gradient(900px 600px at -10% 20%,rgba(1,150,250,.16),transparent 60%),var(--bg)}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;will-change:transform}
+.orb.a{width:520px;height:520px;left:-140px;top:8%;background:radial-gradient(circle,#0196fa,transparent 65%);animation:drift-a 22s ease-in-out infinite alternate}
+.orb.b{width:620px;height:620px;right:-200px;top:-8%;background:radial-gradient(circle,#7420f9,transparent 65%);animation:drift-b 26s ease-in-out infinite alternate}
+.orb.c{width:420px;height:420px;left:38%;top:58%;background:radial-gradient(circle,#22d3ee,transparent 65%);opacity:.28;animation:drift-c 30s ease-in-out infinite alternate}
+@keyframes drift-a{to{transform:translate(160px,120px) scale(1.15)}}
+@keyframes drift-b{to{transform:translate(-180px,160px) scale(.9)}}
+@keyframes drift-c{to{transform:translate(-220px,-120px) scale(1.2)}}
+.grain{position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 0%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 30%,#000 0%,transparent 70%)}
+
+/* ---------- Glass primitive ---------- */
+.glass{
+  position:relative;
+  background:var(--glass);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 20px 60px -20px rgba(0,0,0,.6);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  backdrop-filter:blur(20px) saturate(150%);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(20,26,58,.92)}
+}
+/* cursor-following light on glass cards */
+.spot::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.14),transparent 45%);
+  transition:opacity .25s ease;
+}
+.spot:hover::after{opacity:1}
+
+/* ---------- Nav ---------- */
+header.nav{position:sticky;top:0;z-index:50;padding:14px 0 0}
+.nav-bar{background:rgba(10,14,36,.62);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px 10px 18px;border-radius:999px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em}
+.brand img{width:34px;height:34px}
+.brand .medi{font-weight:400;color:var(--ink)}
+.brand .core{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-links{display:flex;gap:6px}
+.nav-links a{padding:8px 14px;border-radius:999px;color:var(--ink-2);font-weight:500;font-size:15px;transition:background .2s,color .2s}
+.nav-links a:hover{background:var(--glass-strong);color:var(--ink)}
+.nav-cta{display:flex;gap:8px;align-items:center}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:999px;border:1px solid var(--line);
+  font:600 15px/1 var(--font-body);color:var(--ink);background:var(--glass-strong);cursor:pointer;
+  transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.btn:hover{transform:translateY(-2px);background:rgba(255,255,255,.16)}
+.btn.primary{border-color:transparent;background:var(--grad);color:#04101f;box-shadow:0 10px 30px -8px rgba(1,150,250,.7)}
+.btn.primary:hover{box-shadow:0 14px 38px -6px rgba(116,32,249,.75)}
+.btn.small{padding:9px 16px;font-size:14px}
+
+/* ---------- Hero ---------- */
+.hero{padding:72px 0 40px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:48px;align-items:center}
+.hero-grid>*,.qs>*{min-width:0}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 8px;border-radius:999px;font-size:14px;color:var(--ink-2)}
+.pill b{padding:3px 10px;border-radius:999px;background:var(--grad);color:#04101f;font-weight:700;font-size:12px}
+h1{
+  font-family:var(--font-display);font-weight:800;letter-spacing:-.035em;line-height:1.02;
+  font-size:clamp(34px,5.6vw,68px);margin:22px 0 20px;
+}
+h1 .grad{background:var(--grad);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 8s linear infinite}
+@keyframes shine{to{background-position:200% 0}}
+.lead{max-width:34em;color:var(--ink-2);font-size:19px;margin:0 0 30px}
+.install{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:520px;
+  padding:10px 10px 10px 20px;border-radius:999px;margin-bottom:22px;
+}
+.install code{min-width:0;font:500 15px var(--font-mono);color:var(--ink);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.install code::-webkit-scrollbar{display:none}
+.install .dollar{color:var(--cyan);margin-right:8px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:26px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:22px}
+.badges img{height:22px;border-radius:4px}
+
+/* ---------- Pipeline visual ---------- */
+.pipeline{padding:26px 26px 22px;--step:78px}
+.pipe-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.dots{display:flex;gap:7px}.dots i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.18)}
+.pipe-title{font:500 13px var(--font-mono);color:var(--ink-3)}
+.pipe-body{position:relative;padding-left:44px}
+.pipe-line{position:absolute;left:14px;top:28px;bottom:28px;width:2px;background:linear-gradient(var(--cyan),var(--blue),var(--violet));opacity:.35;border-radius:2px}
+.packet{
+  position:absolute;left:5px;top:19px;width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff,var(--cyan) 45%,var(--blue));
+  box-shadow:0 0 0 6px rgba(34,211,238,.15),0 0 28px 6px rgba(34,211,238,.7);
+  animation:travel 6s cubic-bezier(.45,0,.55,1) infinite;
+}
+@keyframes travel{
+  0%{transform:translateY(0);opacity:0}
+  4%{opacity:1}
+  70%{transform:translateY(calc(var(--step)*4));opacity:1}
+  80%,100%{transform:translateY(calc(var(--step)*4));opacity:0}
+}
+.node{
+  position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  height:56px;margin-bottom:22px;padding:0 18px;border-radius:var(--radius-md);
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  animation:lit 6s ease-in-out infinite;animation-delay:calc(var(--i)*1.05s);
+}
+.node:last-child{margin-bottom:0}
+.node .name{font:600 15px var(--font-display)}
+.node .meta{font:400 12.5px var(--font-mono);color:var(--ink-3)}
+@keyframes lit{
+  0%,16%{border-color:rgba(34,211,238,.9);background:rgba(34,211,238,.14);box-shadow:0 0 0 1px rgba(34,211,238,.35),0 0 32px -4px rgba(34,211,238,.55)}
+  26%,100%{border-color:var(--line);background:rgba(255,255,255,.05);box-shadow:none}
+}
+.node.core{border-style:dashed}
+.pipe-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink-3)}
+.pipe-foot span b{color:var(--cyan);font-weight:600}
+
+/* ---------- Sections ---------- */
+section{padding:84px 0}
+.sec-head{max-width:640px;margin-bottom:44px}
+h2{font-family:var(--font-display);font-weight:700;letter-spacing:-.025em;line-height:1.1;font-size:clamp(30px,4vw,46px);margin:0 0 14px}
+.sec-head p{color:var(--ink-2);margin:0;font-size:18px}
+
+/* Bento features */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
+.card{padding:28px;border-radius:var(--radius-lg)}
+.card h3{font-family:var(--font-display);font-size:21px;letter-spacing:-.015em;margin:14px 0 8px}
+.card p{margin:0;color:var(--ink-2);font-size:16px}
+.ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(34,211,238,.22),rgba(116,32,249,.28));border:1px solid var(--line)}
+.ico svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.c-wide{grid-column:span 4}.c-mid{grid-column:span 2}.c-third{grid-column:span 3}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.chip{padding:7px 13px;border-radius:999px;font:500 13.5px var(--font-mono);border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink)}
+.chip i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-right:8px;box-shadow:0 0 10px var(--cyan);animation:blink 2.4s ease-in-out infinite}
+.chip:nth-child(2) i{animation-delay:.6s;background:var(--blue);box-shadow:0 0 10px var(--blue)}
+.chip:nth-child(3) i{animation-delay:1.2s;background:#a978ff;box-shadow:0 0 10px #a978ff}
+@keyframes blink{50%{opacity:.25}}
+
+/* Reveal (one staggered entrance for the bento grid) */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--d,0)*90ms)}
+.reveal.in{opacity:1;transform:none}
+
+/* Quick start */
+.qs{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:36px;align-items:start}
+.steps{display:grid;gap:12px}
+.step-btn{
+  text-align:left;padding:18px 20px;border-radius:var(--radius-md);border:1px solid var(--line);
+  background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer;font:inherit;
+  transition:background .25s,border-color .25s,transform .25s;
+}
+.step-btn strong{display:block;font-family:var(--font-display);font-size:17px;margin-bottom:2px}
+.step-btn span{color:var(--ink-3);font-size:14.5px}
+.step-btn:hover{transform:translateX(4px)}
+.step-btn[aria-selected="true"]{background:var(--glass-strong);border-color:rgba(34,211,238,.6);box-shadow:0 0 0 1px rgba(34,211,238,.25),0 12px 40px -14px rgba(34,211,238,.5)}
+.code{padding:0;overflow:hidden}
+.code-top{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.code-top .file{font:500 13px var(--font-mono);color:var(--ink-3)}
+.copy{font:600 13px var(--font-body);color:var(--ink-2);background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;transition:background .2s,color .2s}
+.copy:hover{background:rgba(255,255,255,.14);color:var(--ink)}
+pre{margin:0;padding:22px 22px 26px;overflow-x:auto;font:400 14.5px/1.75 var(--font-mono);color:#dfe6ff;min-height:340px}
+.panel[hidden]{display:none}
+.k{color:#c4a2ff}.t{color:#5fd8f5}.s{color:#9be7a8}.c{color:#6f7ba3;font-style:italic}.m{color:#7fb8ff}
+
+/* Creator */
+.creator{display:flex;gap:28px;align-items:center;padding:40px;border-radius:32px}
+.creator img{flex:none}
+.creator h2{font-size:clamp(26px,3.4vw,38px);margin-bottom:10px}
+.creator p{color:var(--ink-2);margin:0 0 22px;max-width:36em}
+.creator .hero-actions{margin:0}
+.creator .btn svg{flex:none}
+
+/* CTA */
+.cta{padding:56px 40px;text-align:center;border-radius:36px;overflow:hidden}
+.cta::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,rgba(34,211,238,.18),rgba(116,32,249,.22),rgba(1,150,250,.18),rgba(34,211,238,.18));filter:blur(60px);animation:spin 18s linear infinite;z-index:-1}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cta h2{margin-bottom:12px}
+.cta p{color:var(--ink-2);max-width:34em;margin:0 auto 26px}
+.cta .install{margin:0 auto 22px}
+.cta .hero-actions{justify-content:center;margin:0}
+
+footer{padding:40px 0 56px;color:var(--ink-3);font-size:15px}
+.foot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;padding-top:28px;border-top:1px solid var(--line)}
+.foot .brand{font-size:17px}.foot .brand img{width:26px;height:26px}
+.foot nav{display:flex;gap:20px}.foot a:hover{color:var(--ink)}
+
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;padding:12px 20px;border-radius:999px;font-weight:600;font-size:15px;pointer-events:none;transition:.35s cubic-bezier(.2,.7,.2,1);z-index:100}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .hero-grid,.qs{grid-template-columns:minmax(0,1fr)}
+  .c-wide,.c-mid,.c-third{grid-column:span 6}
+  .nav-links{display:none}
+}
+@media (max-width:560px){
+  .creator{flex-direction:column;align-items:flex-start;padding:28px 22px}
+  section{padding:60px 0}
+  .hero{padding-top:44px}
+  .nav-cta .btn:not(.primary){display:none}
+  .nav-cta .btn[aria-label^="Read"]{display:inline-flex;padding:9px 12px}
+  .nav-cta .btn[aria-label^="Read"] .li-text{display:none}
+  .cta{padding:40px 20px}
+  .install{border-radius:22px;padding-left:14px}
+  .install code{font-size:12.5px}
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+  .packet{opacity:1}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#features">Skip to content</a>
+
+<div class="ambient" aria-hidden="true">
+  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+  <div class="grain"></div>
+</div>
+
+<header class="nav">
+  <div class="wrap">
+    <div class="nav-bar glass">
+      <a class="brand" href="#top" aria-label="MediCore home">
+        <img src="assets/icon.png" alt="" width="34" height="34">
+        <span><span class="medi">Medi</span><span class="core">Core</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#quickstart">Quick start</a>
+        <a href="#creator">Creator</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn small" href="https://github.com/VarunSalma/MediCore#readme" rel="noopener noreferrer" target="_blank" aria-label="Read the documentation (README on GitHub)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg><span class="li-text">Docs</span></a>
+        <a class="btn small" href="https://www.linkedin.com/in/varun-kumar-software-engineer" rel="noopener noreferrer" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3zM9.5 9.75h3.8v1.54h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.1c0-1.22-.02-2.78-1.7-2.78-1.7 0-1.96 1.33-1.96 2.7V21h-4z"/></svg><span class="li-text">LinkedIn</span></a>
+        <a class="btn small primary" href="https://www.nuget.org/packages/MediCore" rel="noopener noreferrer">Get on NuGet</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="pill glass"><b>New</b> Now available on NuGet</div>
+        <h1>Send a command.<br><span class="grad">Everything else runs around it.</span></h1>
+        <p class="lead">MediCore is a lightweight CQRS mediator for .NET. Validation, logging and transactions run as interceptors, so your handlers only contain business logic.</p>
+
+        <div class="install glass" role="group" aria-label="Install command">
+          <code><span class="dollar">$</span>dotnet add package MediCore</code>
+          <button class="btn primary small" data-copy="dotnet add package MediCore">Copy</button>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn primary" href="#quickstart">See how it works</a>
+          <a class="btn" href="https://github.com/VarunSalma/MediCore#readme" rel="noopener noreferrer" target="_blank"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg> Read the docs</a>
+        </div>
+
+        <div class="badges">
+          <img src="https://img.shields.io/nuget/v/MediCore?style=flat-square&color=0196fa&label=nuget" alt="NuGet version" loading="lazy" onerror="this.remove()">
+          <img src="https://img.shields.io/nuget/dt/MediCore?style=flat-square&color=7420f9&label=downloads" alt="NuGet downloads" loading="lazy" onerror="this.remove()">
+          <img src="https://img.shields.io/badge/license-MIT-22d3ee?style=flat-square" alt="MIT license" loading="lazy" onerror="this.remove()">
+          <img src="https://img.shields.io/badge/.NET-8.0-0196fa?style=flat-square" alt=".NET 8" loading="lazy" onerror="this.remove()">
+        </div>
+      </div>
+
+      <!-- Live pipeline: the memorable thing on this page -->
+      <div class="pipeline glass" role="img" aria-label="A request passes through logging, validation and transaction interceptors before reaching the handler">
+        <div class="pipe-head">
+          <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="pipe-title">mediator.Send(command)</span>
+        </div>
+        <div class="pipe-body" aria-hidden="true">
+          <div class="pipe-line"></div>
+          <div class="packet"></div>
+          <div class="node" style="--i:0"><span class="name">CreateOrderCommand</span><span class="meta">request</span></div>
+          <div class="node" style="--i:1"><span class="name">Logging</span><span class="meta">interceptor</span></div>
+          <div class="node" style="--i:2"><span class="name">Validation</span><span class="meta">interceptor</span></div>
+          <div class="node" style="--i:3"><span class="name">Transaction</span><span class="meta">interceptor</span></div>
+          <div class="node core" style="--i:4"><span class="name">CreateOrderHandler</span><span class="meta">your code</span></div>
+        </div>
+        <div class="pipe-foot"><span>Invalid request? <b>Stops at validation</b></span><span>Handler throws? <b>Transaction rolls back</b></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>The plumbing you keep rewriting, built in</h2>
+        <p>MediCore gives you the mediator pattern and the cross-cutting pieces that usually come with it.</p>
+      </div>
+
+      <div class="bento">
+        <article class="card glass spot reveal c-wide" style="--d:0">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="1.6" fill="#fff"/><circle cx="15" cy="12" r="1.6" fill="#fff"/><circle cx="8" cy="17" r="1.6" fill="#fff"/></svg></div>
+          <h3>Request interceptors</h3>
+          <p>Wrap every request with reusable steps. Turn on logging, validation and transactions once, and every command and query gets them.</p>
+          <div class="chips"><span class="chip"><i></i>Logging</span><span class="chip"><i></i>Validation</span><span class="chip"><i></i>Transactions</span></div>
+        </article>
+
+        <article class="card glass spot reveal c-mid" style="--d:1">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+          <h3>Notifications</h3>
+          <p>Publish an event once and let any number of handlers react to it.</p>
+        </article>
+
+        <article class="card glass spot reveal c-mid" style="--d:2">
+          <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg></div>
+          <h3>Service registry</h3>
+          <p>Register handlers and interceptors in one place, with the standard .NET dependency injection you already use.</p>
+        </article>
+
+        <article class="card glass spot reveal c-wide" style="--d:3">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M8 7 3 12l5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div>
+          <h3>Small, focused interfaces</h3>
+          <p>Commands, queries, notifications and interceptors each have their own interface. Your code says what it does, and swapping or testing a piece stays simple.</p>
+        </article>
+
+        <article class="card glass spot reveal c-third" style="--d:4">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h3>Modern .NET</h3>
+          <p>Built for .NET 8 with nullable reference types and XML docs, so IntelliSense explains each type as you type.</p>
+        </article>
+
+        <article class="card glass spot reveal c-third" style="--d:5">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M5 19h14"/></svg></div>
+          <h3>Light to adopt</h3>
+          <p>It only depends on the Microsoft.Extensions abstractions for dependency injection and logging. No extra frameworks to pull in.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section id="quickstart">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Running in three steps</h2>
+        <p>Register MediCore, write a command and handler, then add an interceptor.</p>
+      </div>
+
+      <div class="qs">
+        <div class="steps" role="tablist" aria-label="Quick start steps">
+          <button class="step-btn" role="tab" aria-selected="true" aria-controls="p1" id="t1"><strong>1. Register</strong><span>Add MediCore to your services</span></button>
+          <button class="step-btn" role="tab" aria-selected="false" aria-controls="p2" id="t2" tabindex="-1"><strong>2. Send a command</strong><span>A request and its handler</span></button>
+          <button class="step-btn" role="tab" aria-selected="false" aria-controls="p3" id="t3" tabindex="-1"><strong>3. Add an interceptor</strong><span>Run code around every request</span></button>
+        </div>
+
+        <!-- NOTE: the code below is illustrative. Match the type and method names to your real MediCore API before publishing. -->
+        <div class="code glass">
+          <div class="code-top"><span class="file" id="filename">Program.cs</span><button class="copy" id="copyCode">Copy code</button></div>
+
+          <div class="panel" id="p1" role="tabpanel" aria-labelledby="t1" data-file="Program.cs"><pre><code><span class="k">using</span> MediCore;
+
+<span class="k">var</span> builder = WebApplication.<span class="m">CreateBuilder</span>(args);
+
+<span class="c">// Scan this assembly for handlers and interceptors</span>
+builder.Services.<span class="m">AddMediCore</span>(options =&gt;
+{
+    options.<span class="m">RegisterServicesFromAssembly</span>(<span class="k">typeof</span>(<span class="t">Program</span>).Assembly);
+});
+
+<span class="k">var</span> app = builder.<span class="m">Build</span>();
+app.<span class="m">Run</span>();</code></pre></div>
+
+          <div class="panel" id="p2" role="tabpanel" aria-labelledby="t2" data-file="CreateOrder.cs" hidden><pre><code><span class="k">public record</span> <span class="t">CreateOrderCommand</span>(<span class="k">string</span> Customer) : <span class="t">ICommand</span>&lt;<span class="k">int</span>&gt;;
+
+<span class="k">public class</span> <span class="t">CreateOrderHandler</span> : <span class="t">ICommandHandler</span>&lt;<span class="t">CreateOrderCommand</span>, <span class="k">int</span>&gt;
+{
+    <span class="k">public</span> Task&lt;<span class="k">int</span>&gt; <span class="m">Handle</span>(<span class="t">CreateOrderCommand</span> command, CancellationToken ct)
+    {
+        <span class="c">// Only business logic here.</span>
+        <span class="k">return</span> Task.<span class="m">FromResult</span>(<span class="s">42</span>);
+    }
+}
+
+<span class="c">// In a controller or endpoint</span>
+<span class="k">var</span> orderId = <span class="k">await</span> mediator.<span class="m">Send</span>(<span class="k">new</span> <span class="t">CreateOrderCommand</span>(<span class="s">"Varun"</span>));</code></pre></div>
+
+          <div class="panel" id="p3" role="tabpanel" aria-labelledby="t3" data-file="TimingInterceptor.cs" hidden><pre><code><span class="k">public class</span> <span class="t">TimingInterceptor</span>&lt;TRequest, TResponse&gt;
+    : <span class="t">IRequestInterceptor</span>&lt;TRequest, TResponse&gt;
+{
+    <span class="k">public async</span> Task&lt;TResponse&gt; <span class="m">Intercept</span>(
+        TRequest request, <span class="t">RequestDelegate</span>&lt;TResponse&gt; next, CancellationToken ct)
+    {
+        <span class="k">var</span> started = Stopwatch.<span class="m">GetTimestamp</span>();
+
+        <span class="k">var</span> response = <span class="k">await</span> <span class="m">next</span>();   <span class="c">// runs the next step, then the handler</span>
+
+        Console.<span class="m">WriteLine</span>(<span class="s">$"{typeof(TRequest).Name} took {Stopwatch.GetElapsedTime(started).TotalMilliseconds} ms"</span>);
+        <span class="k">return</span> response;
+    }
+}</code></pre></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CREATOR -->
+  <section id="creator">
+    <div class="wrap">
+      <div class="creator glass spot">
+        <img src="assets/icon.png" alt="" width="72" height="72">
+        <div>
+          <h2>Built in the open</h2>
+          <p>MediCore is open source and created by <strong>Varun Kumar A</strong>, a software engineer working with .NET and Angular. Questions, ideas and feedback are always welcome.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="https://www.linkedin.com/in/varun-kumar-software-engineer" rel="noopener noreferrer"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3zM9.5 9.75h3.8v1.54h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.1c0-1.22-.02-2.78-1.7-2.78-1.7 0-1.96 1.33-1.96 2.7V21h-4z"/></svg> Connect on LinkedIn</a>
+            <a class="btn" href="https://github.com/VarunSalma/MediCore/issues" rel="noopener noreferrer">Open an issue</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <div class="wrap">
+      <div class="cta glass">
+        <img src="assets/icon.png" alt="" width="64" height="64" style="margin:0 auto 18px">
+        <h2>Try MediCore in your next project</h2>
+        <p>Install it, send your first command, and tell us what you think. Feedback and issues on GitHub are very welcome.</p>
+        <div class="install glass">
+          <code><span class="dollar">$</span>dotnet add package MediCore</code>
+          <button class="btn primary small" data-copy="dotnet add package MediCore">Copy</button>
+        </div>
+        <div class="hero-actions">
+          <a class="btn primary" href="https://www.nuget.org/packages/MediCore" rel="noopener noreferrer">View on NuGet</a>
+          <a class="btn" href="https://github.com/VarunSalma/MediCore/issues" rel="noopener noreferrer">Share feedback</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top"><img src="assets/icon.png" alt="" width="26" height="26"><span><span class="medi">Medi</span><span class="core">Core</span></span></a>
+    <span>Open source under the MIT license. Built by Varun Kumar A.</span>
+    <nav aria-label="Footer">
+      <a href="https://github.com/VarunSalma/MediCore#readme" rel="noopener noreferrer" target="_blank">Docs</a>
+      <a href="https://github.com/VarunSalma/MediCore" rel="noopener noreferrer">GitHub</a>
+      <a href="https://www.nuget.org/packages/MediCore" rel="noopener noreferrer">NuGet</a>
+      <a href="https://www.linkedin.com/in/varun-kumar-software-engineer" rel="noopener noreferrer">LinkedIn</a>
+    </nav>
+  </div>
+</footer>
+
+<div class="toast glass" id="toast" role="status" aria-live="polite">Copied</div>
+
+<script>
+(function(){
+  // Copy buttons
+  var toast = document.getElementById('toast'), timer;
+  function say(msg){
+    toast.textContent = msg; toast.classList.add('show');
+    clearTimeout(timer); timer = setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+  }
+  function copy(text){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text);
+    }
+    var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta);
+    return Promise.resolve();
+  }
+  document.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click', function(){ copy(b.dataset.copy).then(function(){ say('Install command copied'); }); });
+  });
+
+  // Quick start tabs
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.step-btn'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+  var fileLabel = document.getElementById('filename');
+  function select(i){
+    tabs.forEach(function(t, n){
+      var on = n === i;
+      t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+      panels[n].hidden = !on;
+    });
+    fileLabel.textContent = panels[i].dataset.file;
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ select(i); });
+    t.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight'){ e.preventDefault(); select((i+1)%tabs.length); tabs[(i+1)%tabs.length].focus(); }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft'){ e.preventDefault(); var p=(i-1+tabs.length)%tabs.length; select(p); tabs[p].focus(); }
+    });
+  });
+  document.getElementById('copyCode').addEventListener('click', function(){
+    var open = panels.filter(function(p){ return !p.hidden; })[0];
+    copy(open.innerText).then(function(){ say('Code copied'); });
+  });
+
+  // Cursor light on glass cards
+  document.querySelectorAll('.spot').forEach(function(el){
+    el.addEventListener('pointermove', function(e){
+      var r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      el.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  // Feature grid entrance
+  var items = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold: .15 });
+    items.forEach(function(el){ io.observe(el); });
+  } else {
+    items.forEach(function(el){ el.classList.add('in'); });
+  }
+})();
+</script>
+</body>
+</html>
