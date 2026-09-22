@@ -443,7 +443,9 @@ footer{padding:40px 0 56px;color:var(--ink-3);font-size:15px}
 <span class="c">// Scan this assembly for handlers and interceptors</span>
 builder.Services.<span class="m">AddMediCore</span>(options =&gt;
 {
-    options.<span class="m">RegisterServicesFromAssembly</span>(<span class="k">typeof</span>(<span class="t">Program</span>).Assembly);
+    options.<span class="m">RegisterHandlersFromAssemblyContaining</span>&lt;<span class="t">Program</span>&gt;();
+    options.<span class="m">AddDefaultInterceptors</span>();
+    options.<span class="m">UseTransactionManager</span>&lt;<span class="t">MyEfTransactionManager</span>&gt;(); <span class="c">// optional — defaults to TransactionScopeManager</span>
 });
 
 <span class="k">var</span> app = builder.<span class="m">Build</span>();
